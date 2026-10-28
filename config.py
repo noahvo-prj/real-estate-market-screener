@@ -3,6 +3,43 @@
 All percentages are stored as decimals (0.07 means 7%).
 """
 
+# --- Markets and data sources ---------------------------------------------------
+# 20 metros picked for a mix of price levels and regions. `zillow_name` must match
+# Zillow's RegionName; `cbsa_code` is the Census metro code (2023 definitions).
+# `cbsa_code_base_year` is only set when the code was different in the base year.
+METROS = [
+    {"zillow_name": "San Diego, CA", "cbsa_code": 41740},
+    {"zillow_name": "Seattle, WA", "cbsa_code": 42660},
+    {"zillow_name": "Boston, MA", "cbsa_code": 14460},
+    {"zillow_name": "Denver, CO", "cbsa_code": 19740},
+    {"zillow_name": "Minneapolis, MN", "cbsa_code": 33460},
+    {"zillow_name": "Phoenix, AZ", "cbsa_code": 38060},
+    {"zillow_name": "Nashville, TN", "cbsa_code": 34980},
+    {"zillow_name": "Raleigh, NC", "cbsa_code": 39580},
+    {"zillow_name": "Dallas, TX", "cbsa_code": 19100},
+    {"zillow_name": "Atlanta, GA", "cbsa_code": 12060},
+    {"zillow_name": "Charlotte, NC", "cbsa_code": 16740},
+    {"zillow_name": "Tampa, FL", "cbsa_code": 45300},
+    {"zillow_name": "Columbus, OH", "cbsa_code": 18140},
+    {"zillow_name": "Houston, TX", "cbsa_code": 26420},
+    {"zillow_name": "Kansas City, MO", "cbsa_code": 28140},
+    {"zillow_name": "Indianapolis, IN", "cbsa_code": 26900},
+    {"zillow_name": "San Antonio, TX", "cbsa_code": 41700},
+    {"zillow_name": "Pittsburgh, PA", "cbsa_code": 38300},
+    {"zillow_name": "Memphis, TN", "cbsa_code": 32820},
+    {"zillow_name": "Cleveland, OH", "cbsa_code": 17410, "cbsa_code_base_year": 17460},
+]
+
+ACS_YEAR = 2024  # latest ACS 1-year release available from the Census API
+ACS_BASE_YEAR = 2019  # 5 years earlier, for income growth (2020 1-year was not released)
+PEP_VINTAGE = 2025  # Census Population Estimates vintage
+PEP_BASE_YEAR = 2020
+HOME_PRICE_GROWTH_YEARS = 5
+RENT_GROWTH_YEARS = 3
+
+PROCESSED_DATA_PATH = "data/processed/markets.csv"
+DEMO_DATA_PATH = "data/demo/markets_demo.csv"
+
 # --- VA funding fee -----------------------------------------------------------
 # Purchase and construction loans. Each tier is (minimum down payment, fee rate),
 # checked from the highest down payment to the lowest.
