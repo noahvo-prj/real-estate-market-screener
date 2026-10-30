@@ -107,3 +107,44 @@ def pillar_grouped_bar(scored: pd.DataFrame) -> go.Figure:
     fig.update_layout(barmode="group", legend=dict(orientation="h", y=1.12))
     fig.update_yaxes(title="Score (0-100)", range=[0, 105])
     return _base_layout(fig, height=400)
+
+
+def projection_chart(projection: pd.DataFrame) -> go.Figure:
+    """Property value, loan balance and equity by year, plus cumulative cash flow."""
+    fig = go.Figure()
+    series = [
+        ("property_value", "Property value", config.SECONDARY_COLOR, "solid"),
+        ("loan_balance", "Loan balance", config.NEUTRAL_COLOR, "solid"),
+        ("equity", "Equity", config.ACCENT_COLOR, "solid"),
+        ("cumulative_cash_flow", "Cumulative cash flow", config.ACCENT_COLOR, "dot"),
+    ]
+    for col, label, color, dash in series:
+        fig.add_trace(go.Scatter(
+            x=projection["year"], y=projection[col], name=label, mode="lines+markers",
+            line=dict(color=color, dash=dash, width=2.5), marker=dict(size=6),
+            hovertemplate=f"Year %{{x}}<br>{label}: $%{{y:,.0f}}<extra></extra>",
+        ))
+    fig.add_hline(0, line=dict(color="#6B7280", width=1))
+    fig.update_xaxes(title="Year", dtick=1)
+    fig.update_yaxes(title=None, tickprefix="$", tickformat=",.0f")
+    fig.update_layout(legend=dict(orientation="h", y=1.12))
+    return _base_layout(fig, height=420)
+
+
+def tornado_chart(sensitivity: pd.DataFrame, metric_label: str) -> go.Figure:
+    """Horizontal bars showing how far the headline metric moves when each input goes down or up."""
+    data = sensitivity.iloc[::-1]  # biggest swing at the top
+    base = data["base"].iloc[0]
+    fig = go.Figure()
+    for col, label, color in [("input_down", "Input lower", config.SECONDARY_COLOR),
+                              ("input_up", "Input higher", config.ACCENT_COLOR)]:
+        fig.add_trace(go.Bar(
+            y=data["input"], x=data[col] - base, base=base, orientation="h", name=label,
+            marker_color=color, customdata=data[col],
+            hovertemplate=f"<b>%{{y}}</b><br>{label}: $%{{customdata:,.0f}}/mo<extra></extra>",
+        ))
+    fig.add_vline(base, line=dict(color="#1C2430", width=1.5))
+    fig.add_annotation(x=base, y=1.06, yref="paper", text=f"Base: ${base:,.0f}/mo", showarrow=False)
+    fig.update_layout(barmode="overlay", legend=dict(orientation="h", y=-0.15))
+    fig.update_xaxes(title=metric_label, tickprefix="$", tickformat=",.0f")
+    return _base_layout(fig, height=380)

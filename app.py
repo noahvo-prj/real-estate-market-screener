@@ -6,7 +6,7 @@ Run with: streamlit run app.py
 import streamlit as st
 
 from src.data_loader import load_markets
-from src.ui import comparison, rankings
+from src.ui import calculator, comparison, rankings
 
 st.set_page_config(page_title="Multifamily Market Screener", layout="wide")
 
@@ -38,7 +38,7 @@ def main() -> None:
     with tab_comparison:
         comparison.render(selected, weights)
     with tab_calculator:
-        st.info("Coming soon.")
+        calculator.render(markets)
     with tab_methodology:
         st.info("Coming soon.")
 
