@@ -6,7 +6,7 @@ owner-occupant, including with a VA loan.
 **Core question:** Which U.S. metros offer the best mix of affordability, growth and rental
 demand for a multifamily owner-occupant, and does a specific property make financial sense?
 
-> **Live app:** _coming soon_
+> **Live app:** [multifamily-screener.streamlit.app](https://multifamily-screener.streamlit.app/)
 
 ![Market rankings](assets/screenshots/01_market_rankings.png)
 
