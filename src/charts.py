@@ -47,6 +47,21 @@ def _highlight_colors(metros: pd.Series, highlight: list[str]) -> list[str]:
     return [config.ACCENT_COLOR if m in highlight else config.NEUTRAL_COLOR for m in metros]
 
 
+# Pixel offsets for labels, staggered so markets that sit close together don't overlap.
+LABEL_OFFSETS = [(-50, -45), (55, -80), (-60, 45), (60, 70), (0, -115)]
+
+
+def _label_selected(fig: go.Figure, data: pd.DataFrame, x: str, y: str, highlight: list[str]) -> None:
+    """Add a label with a pointer line for each highlighted market."""
+    chosen = data[data["metro"].isin(highlight)].sort_values(x)
+    for (_, row), (ax, ay) in zip(chosen.iterrows(), LABEL_OFFSETS):
+        fig.add_annotation(
+            x=row[x], y=row[y], text=row["metro"], ax=ax, ay=ay,
+            showarrow=True, arrowhead=0, arrowwidth=1, arrowcolor="#6B7280",
+            font=dict(size=12, color="#1C2430"), bgcolor="rgba(255,255,255,0.85)",
+        )
+
+
 def price_rent_scatter(markets: pd.DataFrame, highlight: list[str]) -> go.Figure:
     """Typical home value vs. typical rent, with dotted rent-to-price guide lines."""
     fig = go.Figure()
@@ -57,28 +72,25 @@ def price_rent_scatter(markets: pd.DataFrame, highlight: list[str]) -> go.Figure
             line=dict(color=config.NEUTRAL_COLOR, dash="dot", width=1),
             name=f"{ratio:.1%} rent-to-price", hoverinfo="skip",
         ))
-    is_selected = markets["metro"].isin(highlight)
     fig.add_trace(go.Scatter(
-        x=markets["zhvi"], y=markets["zori"], mode="markers+text",
-        text=markets["metro"].where(is_selected, ""), textposition="top center",
+        x=markets["zhvi"], y=markets["zori"], mode="markers",
         marker=dict(size=12, color=_highlight_colors(markets["metro"], highlight), line=dict(color="white", width=1)),
         customdata=markets[["metro", "rent_to_price"]],
         hovertemplate="<b>%{customdata[0]}</b><br>Home value: $%{x:,.0f}<br>Rent: $%{y:,.0f}/mo"
                       "<br>Rent-to-price: %{customdata[1]:.2%}<extra></extra>",
         showlegend=False,
     ))
-    fig.update_xaxes(title="Typical home value (Zillow ZHVI)", tickprefix="$", tickformat=",.0f", rangemode="tozero")
-    fig.update_yaxes(title="Typical monthly rent (Zillow ZORI)", tickprefix="$", tickformat=",.0f", rangemode="tozero")
+    fig.update_xaxes(title="Typical home value (Zillow ZHVI)", tickformat="$,.0f", rangemode="tozero")
+    fig.update_yaxes(title="Typical monthly rent (Zillow ZORI)", tickformat="$,.0f", rangemode="tozero")
     fig.update_layout(legend=dict(orientation="h", y=-0.2))
+    _label_selected(fig, markets, "zhvi", "zori", highlight)
     return _base_layout(fig, height=440)
 
 
 def growth_affordability_scatter(scored: pd.DataFrame, highlight: list[str]) -> go.Figure:
     """Affordability pillar vs. growth pillar, split into quadrants at 50."""
-    is_selected = scored["metro"].isin(highlight)
     fig = go.Figure(go.Scatter(
-        x=scored["affordability_score"], y=scored["growth_score"], mode="markers+text",
-        text=scored["metro"].where(is_selected, ""), textposition="top center",
+        x=scored["affordability_score"], y=scored["growth_score"], mode="markers",
         marker=dict(size=12, color=_highlight_colors(scored["metro"], highlight), line=dict(color="white", width=1)),
         customdata=scored[["metro"]],
         hovertemplate="<b>%{customdata[0]}</b><br>Affordability: %{x:.0f}<br>Growth: %{y:.0f}<extra></extra>",
@@ -92,6 +104,7 @@ def growth_affordability_scatter(scored: pd.DataFrame, highlight: list[str]) -> 
     fig.add_annotation(x=98, y=-4, text="Affordable, slower growth", xanchor="right", **corner)
     fig.update_xaxes(title="Affordability score (higher = more affordable)", range=[-8, 108])
     fig.update_yaxes(title="Growth score", range=[-10, 108])
+    _label_selected(fig, scored, "affordability_score", "growth_score", highlight)
     return _base_layout(fig, height=440)
 
 
@@ -126,7 +139,7 @@ def projection_chart(projection: pd.DataFrame) -> go.Figure:
         ))
     fig.add_hline(0, line=dict(color="#6B7280", width=1))
     fig.update_xaxes(title="Year", dtick=1)
-    fig.update_yaxes(title=None, tickprefix="$", tickformat=",.0f")
+    fig.update_yaxes(title=None, tickformat="$,.0f")
     fig.update_layout(legend=dict(orientation="h", y=1.12))
     return _base_layout(fig, height=420)
 
@@ -146,5 +159,5 @@ def tornado_chart(sensitivity: pd.DataFrame, metric_label: str) -> go.Figure:
     fig.add_vline(base, line=dict(color="#1C2430", width=1.5))
     fig.add_annotation(x=base, y=1.06, yref="paper", text=f"Base: ${base:,.0f}/mo", showarrow=False)
     fig.update_layout(barmode="overlay", legend=dict(orientation="h", y=-0.15))
-    fig.update_xaxes(title=metric_label, tickprefix="$", tickformat=",.0f")
+    fig.update_xaxes(title=metric_label, tickformat="$,.0f")
     return _base_layout(fig, height=380)

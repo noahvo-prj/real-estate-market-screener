@@ -7,6 +7,7 @@ import config
 from src import charts, scoring
 
 MAX_MARKETS = 5
+ROW_HEIGHT = 35  # Streamlit's dataframe row height in pixels; used to show every row without scrolling
 
 # column -> (label, format)
 RAW_ROWS = {
@@ -75,7 +76,8 @@ def render(markets: pd.DataFrame, weights: dict[str, float] | None) -> None:
         st.info("Choose at least two markets.")
         return
 
-    st.dataframe(comparison_table(scored, selected), hide_index=True, width="stretch")
+    table = comparison_table(scored, selected)
+    st.dataframe(table, hide_index=True, width="stretch", height=ROW_HEIGHT * (len(table) + 1) + 3)
     st.caption(
         "Home values and rents are Zillow metro-wide typical values (mostly single-family homes), "
         "not duplex prices or duplex rents. They are screening proxies."

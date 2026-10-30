@@ -68,6 +68,11 @@ def ratio(value: float | None) -> str:
     return "n/a" if value is None else f"{value:.2f}x"
 
 
+def md(text: str) -> str:
+    """Escape dollar signs so Streamlit markdown doesn't render "$1 ... $2" as a math formula."""
+    return text.replace("$", r"\$")
+
+
 def headline(net_housing_cost: float, comparable_rent: float) -> str:
     """One-sentence rent-vs-own summary for the owner-occupant."""
     if net_housing_cost < 0:
@@ -127,16 +132,16 @@ def _inputs_section(markets: pd.DataFrame) -> tuple[calc.PropertyInputs, dict, d
 
     with st.expander("Property", expanded=True):
         c1, c2, c3 = st.columns(3)
-        c1.number_input("Purchase price ($)", min_value=0.0, step=5_000.0, key="calc_price",
+        c1.number_input("Purchase price ($)", min_value=0.0, step=5_000.0, format="%.0f", key="calc_price",
                         help="Prefilled from Zillow ZHVI. Replace with a real listing price.")
         c1.caption(f"Prefill: Zillow ZHVI, {zillow_month}. Mostly single-family homes, not duplex prices.")
         c2.selectbox("Number of units", [2, 3, 4], key="calc_units")
         c2.number_input("Units you live in", min_value=0, max_value=3, step=1, key="calc_owner_units",
                         help="Owner-occupied units. Must be fewer than total units.")
-        c3.number_input("Monthly rent per rentable unit ($)", min_value=0.0, step=25.0, key="calc_rent",
+        c3.number_input("Monthly rent per rentable unit ($)", min_value=0.0, step=25.0, format="%.0f", key="calc_rent",
                         help="Prefilled from Zillow ZORI. Replace with local rent comps for this unit size.")
         c3.caption(f"Prefill: Zillow ZORI, {zillow_month}. All rental types, not a duplex unit's rent.")
-        c3.number_input("Rent for a comparable place to live ($/mo)", min_value=0.0, step=25.0,
+        c3.number_input("Rent for a comparable place to live ($/mo)", min_value=0.0, step=25.0, format="%.0f",
                         key="calc_comparable_rent",
                         help="What you'd pay to rent a similar home instead. Used for rent-vs-own.")
 
@@ -144,12 +149,12 @@ def _inputs_section(markets: pd.DataFrame) -> tuple[calc.PropertyInputs, dict, d
         c1, c2, c3 = st.columns(3)
         c1.toggle("VA loan", key="calc_va")
         c1.number_input("Down payment (% of price)", min_value=0.0, max_value=100.0, step=1.0, key="calc_down_pct")
-        c1.caption(f"= {money(s['calc_price'] * s['calc_down_pct'] / 100)}")
+        c1.caption(md(f"= {money(s['calc_price'] * s['calc_down_pct'] / 100)}"))
         c2.number_input("Interest rate (%)", min_value=0.0, max_value=100.0, step=0.125, format="%.3f",
                         key="calc_rate_pct", help="The default is a placeholder. Use a real lender quote.")
         c2.caption("Default is a placeholder, not today's rate. Enter a real lender quote.")
         c2.selectbox("Loan term (years)", [15, 20, 30], key="calc_term")
-        c3.number_input("Closing costs ($)", min_value=0.0, step=500.0, key="calc_closing_costs",
+        c3.number_input("Closing costs ($)", min_value=0.0, step=500.0, format="%.0f", key="calc_closing_costs",
                         help=f"Prefilled at {D['closing_cost_rate']:.0%} of price. Replace with the lender's estimate.")
         if s["calc_va"]:
             v1, v2, v3 = st.columns(3)
@@ -164,8 +169,8 @@ def _inputs_section(markets: pd.DataFrame) -> tuple[calc.PropertyInputs, dict, d
         c1.number_input("Property tax rate (% of price per year)", min_value=0.0, max_value=100.0, step=0.05,
                         format="%.2f", key="calc_tax_pct")
         c1.caption(f"Prefill: Census ACS {acs_year}, median taxes / median home value. Varies within a metro.")
-        c1.number_input("Insurance ($/year)", min_value=0.0, step=100.0, key="calc_insurance")
-        c1.number_input("HOA ($/month)", min_value=0.0, step=25.0, key="calc_hoa")
+        c1.number_input("Insurance ($/year)", min_value=0.0, step=100.0, format="%.0f", key="calc_insurance")
+        c1.number_input("HOA ($/month)", min_value=0.0, step=25.0, format="%.0f", key="calc_hoa")
         c2.number_input("Vacancy (%)", min_value=0.0, max_value=100.0, step=0.5, key="calc_vacancy_pct")
         c2.caption(f"Prefill: Census ACS {acs_year} rental vacancy rate (metro-wide).")
         c2.number_input("Maintenance (% of rent)", min_value=0.0, max_value=100.0, step=0.5, key="calc_maintenance_pct")
@@ -173,15 +178,15 @@ def _inputs_section(markets: pd.DataFrame) -> tuple[calc.PropertyInputs, dict, d
                         help="Savings for big replacements: roof, HVAC, water heater.")
         c3.number_input("Property management (% of rent collected)", min_value=0.0, max_value=100.0, step=0.5,
                         key="calc_management_pct", help="0% if you manage it yourself.")
-        c3.number_input("Owner-paid utilities ($/month)", min_value=0.0, step=25.0, key="calc_utilities")
-        c3.number_input("Other expenses ($/month)", min_value=0.0, step=25.0, key="calc_other")
+        c3.number_input("Owner-paid utilities ($/month)", min_value=0.0, step=25.0, format="%.0f", key="calc_utilities")
+        c3.number_input("Other expenses ($/month)", min_value=0.0, step=25.0, format="%.0f", key="calc_other")
 
     with st.expander("Upfront cash"):
         c1, c2, c3 = st.columns(3)
-        c1.number_input("Cash reserves ($)", min_value=0.0, step=500.0, key="calc_reserves",
+        c1.number_input("Cash reserves ($)", min_value=0.0, step=500.0, format="%.0f", key="calc_reserves",
                         help="Money set aside after closing for surprises. Lenders may require some.")
-        c2.number_input("Initial repairs ($)", min_value=0.0, step=500.0, key="calc_repairs")
-        c3.number_input("Furnishing ($)", min_value=0.0, step=500.0, key="calc_furnishing",
+        c2.number_input("Initial repairs ($)", min_value=0.0, step=500.0, format="%.0f", key="calc_repairs")
+        c3.number_input("Furnishing ($)", min_value=0.0, step=500.0, format="%.0f", key="calc_furnishing",
                         help="Usually only needed for a short-term rental unit.")
 
     with st.expander("Projection assumptions"):
@@ -197,12 +202,12 @@ def _inputs_section(markets: pd.DataFrame) -> tuple[calc.PropertyInputs, dict, d
         st.caption("Short-term rental rules vary by city and can prohibit it entirely. Check local rules first.")
         if s["calc_str"]:
             c1, c2, c3 = st.columns(3)
-            c1.number_input("Nightly rate ($)", min_value=0.0, step=5.0, key="calc_str_nightly")
+            c1.number_input("Nightly rate ($)", min_value=0.0, step=5.0, format="%.0f", key="calc_str_nightly")
             c1.number_input("Occupancy (%)", min_value=0.0, max_value=100.0, step=1.0, key="calc_str_occupancy_pct")
             c2.number_input("Platform fees (% of revenue)", min_value=0.0, max_value=100.0, step=0.5,
                             key="calc_str_platform_pct")
-            c2.number_input("Cleaning ($/month)", min_value=0.0, step=25.0, key="calc_str_cleaning")
-            c3.number_input("Extra utilities and supplies ($/month)", min_value=0.0, step=25.0, key="calc_str_extra")
+            c2.number_input("Cleaning ($/month)", min_value=0.0, step=25.0, format="%.0f", key="calc_str_cleaning")
+            c3.number_input("Extra utilities and supplies ($/month)", min_value=0.0, step=25.0, format="%.0f", key="calc_str_extra")
 
     inputs = calc.PropertyInputs(
         purchase_price=s["calc_price"],
@@ -299,7 +304,7 @@ def _cash_needed_section(inputs: calc.PropertyInputs) -> None:
     _metric_table(rows)
     if inputs.use_va_loan:
         where = "added to the loan" if inputs.finance_funding_fee else "paid in cash at closing"
-        st.caption(f"VA funding fee: {money(fee)} ({where}). Loan amount: {money(calc.loan_amount(inputs))}.")
+        st.caption(md(f"VA funding fee: {money(fee)} ({where}). Loan amount: {money(calc.loan_amount(inputs))}."))
     if inputs.down_payment == 0:
         st.caption("0% down does not mean $0 invested: closing costs and reserves still need cash.")
 
@@ -315,12 +320,12 @@ def _str_section(inputs: calc.PropertyInputs, owner: dict, str_inputs: dict) -> 
     c2.metric("Long-term rent for that unit", money(long_term) + "/mo", help="Rent per unit after vacancy.")
     c3.metric("Difference", money(difference) + "/mo")
     if owner["rented_units"] >= 1:
-        st.caption(
+        st.caption(md(
             f"With one unit as an STR, your net housing cost would be about "
             f"{money(owner['net_housing_cost'] - difference)}/mo. "
             "This ignores furnishing (entered under Upfront cash), extra insurance and STR taxes. "
             "Check local STR rules: some cities prohibit short-term rentals entirely."
-        )
+        ))
 
 
 def _projection_section(inputs: calc.PropertyInputs, projection: dict, view: str) -> None:
@@ -398,7 +403,7 @@ def render(markets: pd.DataFrame) -> None:
                   help="If every unit were rented out.")
         c4.metric("Cash needed at purchase", money(cash_total))
         if lives_there:
-            st.markdown(f"**{headline(owner['net_housing_cost'], owner['comparable_rent'])}**")
+            st.markdown(md(f"**{headline(owner['net_housing_cost'], owner['comparable_rent'])}**"))
 
     st.divider()
     left, right = st.columns(2)
