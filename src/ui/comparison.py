@@ -63,9 +63,13 @@ def render(markets: pd.DataFrame, weights: dict[str, float] | None) -> None:
         scored = scored.drop(columns=["composite_score", "rank"])
         st.warning("Sidebar weights don't total 100%, so composite scores and ranks are hidden.")
 
+    # Keep the user's picks across reruns (e.g. when weights change); drop any no longer available.
+    options = scored["metro"].tolist()
+    kept = [m for m in st.session_state.get("compare_markets", []) if m in options]
+    st.session_state["compare_markets"] = kept if "compare_markets" in st.session_state else options[:3]
     selected = st.multiselect(
-        "Markets to compare", scored["metro"].tolist(), default=scored["metro"].head(3).tolist(),
-        max_selections=MAX_MARKETS, help="Defaults to the top three ranked markets.",
+        "Markets to compare", options, key="compare_markets",
+        max_selections=MAX_MARKETS, help="Starts with the top three ranked markets.",
     )
     if len(selected) < 2:
         st.info("Choose at least two markets.")

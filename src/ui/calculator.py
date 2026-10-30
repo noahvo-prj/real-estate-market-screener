@@ -5,7 +5,7 @@ import streamlit as st
 
 import config
 from src import calculations as calc
-from src import charts
+from src import charts, scoring
 
 D = config.CALCULATOR_DEFAULTS
 P = config.PROJECTION_DEFAULTS
@@ -68,6 +68,15 @@ def ratio(value: float | None) -> str:
     return "n/a" if value is None else f"{value:.2f}x"
 
 
+def headline(net_housing_cost: float, comparable_rent: float) -> str:
+    """One-sentence rent-vs-own summary for the owner-occupant."""
+    if net_housing_cost < 0:
+        return (f"The other units would cover all costs and leave you about {money(-net_housing_cost)}/month "
+                f"ahead, vs. paying {money(comparable_rent)} to rent a similar unit.")
+    return (f"You'd pay about {money(net_housing_cost)}/month to live here vs. "
+            f"{money(comparable_rent)} renting a similar unit.")
+
+
 # --- Prefill ------------------------------------------------------------------
 
 def _apply_prefill(markets: pd.DataFrame) -> None:
@@ -88,6 +97,7 @@ def _apply_prefill(markets: pd.DataFrame) -> None:
     setval("calc_tax_pct", row["effective_tax_rate"], lambda v: round(v * 100, 2), FALLBACK_TAX_PCT)
     setval("calc_vacancy_pct", row["rental_vacancy_rate"], lambda v: round(v * 100, 1), FALLBACK_VACANCY_PCT)
     st.session_state["calc_closing_costs"] = float(round(st.session_state["calc_price"] * D["closing_cost_rate"], -2))
+    st.session_state["calc_prefilled_price"] = st.session_state["calc_price"]
     st.session_state["calc_prefill_missing"] = missing
 
 
@@ -95,8 +105,16 @@ def _init_state(markets: pd.DataFrame) -> None:
     for key, value in STATE_DEFAULTS.items():
         st.session_state.setdefault(key, value)
     if st.session_state.get("calc_market") not in set(markets["metro"]):
-        st.session_state["calc_market"] = markets["metro"].iloc[0]
+        st.session_state["calc_market"] = _top_market(markets)
         _apply_prefill(markets)
+
+
+def _top_market(markets: pd.DataFrame) -> str:
+    """The #1 market under the default weights, so the calculator opens on a sensible example."""
+    if len(markets) < 2:
+        return markets["metro"].iloc[0]
+    scored = scoring.score_markets(markets, config.WEIGHT_PRESETS[config.DEFAULT_PRESET])
+    return scored["metro"].iloc[0]
 
 
 # --- Inputs -------------------------------------------------------------------
@@ -126,8 +144,10 @@ def _inputs_section(markets: pd.DataFrame) -> tuple[calc.PropertyInputs, dict, d
         c1, c2, c3 = st.columns(3)
         c1.toggle("VA loan", key="calc_va")
         c1.number_input("Down payment (% of price)", min_value=0.0, max_value=100.0, step=1.0, key="calc_down_pct")
+        c1.caption(f"= {money(s['calc_price'] * s['calc_down_pct'] / 100)}")
         c2.number_input("Interest rate (%)", min_value=0.0, max_value=100.0, step=0.125, format="%.3f",
                         key="calc_rate_pct", help="The default is a placeholder. Use a real lender quote.")
+        c2.caption("Default is a placeholder, not today's rate. Enter a real lender quote.")
         c2.selectbox("Loan term (years)", [15, 20, 30], key="calc_term")
         c3.number_input("Closing costs ($)", min_value=0.0, step=500.0, key="calc_closing_costs",
                         help=f"Prefilled at {D['closing_cost_rate']:.0%} of price. Replace with the lender's estimate.")
@@ -243,7 +263,7 @@ def _owner_section(owner: dict) -> None:
         ("Operating expenses (whole property)", money(owner["monthly_operating_expenses"]) + "/mo"),
         (f"Rent from the other {owner['rented_units']} unit(s), after vacancy",
          "-" + money(owner["monthly_effective_rent"]) + "/mo"),
-        ("Your net housing cost", money(owner["net_housing_cost"]) + "/mo"),
+        ("Your net housing cost (negative = you come out ahead)", money(owner["net_housing_cost"]) + "/mo"),
         ("Renting a comparable place instead", money(owner["comparable_rent"]) + "/mo"),
     ])
     st.caption("Your own unit is never counted as rental income in this view.")
@@ -340,10 +360,11 @@ def render(markets: pd.DataFrame) -> None:
     if st.session_state.get("calc_prefill_missing"):
         st.info("Some values aren't available for this market and were left at their previous values. "
                 "Enter them manually.")
-    st.warning(
-        "The prefilled price is the metro's typical home value, which mostly reflects single-family homes. "
-        "Replace it with a real listing price for the property you're considering."
-    )
+    if st.session_state["calc_price"] == st.session_state.get("calc_prefilled_price"):
+        st.warning(
+            "The purchase price is still the metro's typical home value, which mostly reflects single-family "
+            "homes. Replace it with a real listing price for the property you're considering."
+        )
 
     cards = st.container()
     inputs, projection, str_inputs = _inputs_section(markets)
@@ -362,7 +383,11 @@ def render(markets: pd.DataFrame) -> None:
 
     with cards:
         c1, c2, c3, c4 = st.columns(4)
-        if lives_there:
+        if lives_there and owner["net_housing_cost"] < 0:
+            c1.metric("You come out ahead by", money(-owner["net_housing_cost"]) + "/mo",
+                      help="Rent from the other units covers the mortgage and all expenses, with this much left over.")
+            c2.metric("Renting a comparable place", money(owner["comparable_rent"]) + "/mo")
+        elif lives_there:
             c1.metric("Your net housing cost", money(owner["net_housing_cost"]) + "/mo",
                       help="Mortgage + operating expenses - rent from the other units.")
             c2.metric("Renting a comparable place", money(owner["comparable_rent"]) + "/mo")
@@ -373,10 +398,7 @@ def render(markets: pd.DataFrame) -> None:
                   help="If every unit were rented out.")
         c4.metric("Cash needed at purchase", money(cash_total))
         if lives_there:
-            st.markdown(
-                f"**You'd pay about {money(owner['net_housing_cost'])}/month to live here vs. "
-                f"{money(owner['comparable_rent'])} renting a similar unit.**"
-            )
+            st.markdown(f"**{headline(owner['net_housing_cost'], owner['comparable_rent'])}**")
 
     st.divider()
     left, right = st.columns(2)

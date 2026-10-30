@@ -5,19 +5,20 @@ Run with: streamlit run app.py
 
 import streamlit as st
 
-from src.data_loader import load_markets
+from src.data_loader import data_version, load_markets
 from src.ui import calculator, comparison, methodology, rankings
 
 st.set_page_config(page_title="Multifamily Market Screener", layout="wide")
 
 
 @st.cache_data
-def get_markets():
+def get_markets(version: tuple[float, float]):
+    """Cached load. `version` changes when a data file is rebuilt, which forces a fresh load."""
     return load_markets()
 
 
 def main() -> None:
-    markets, is_demo = get_markets()
+    markets, is_demo = get_markets(data_version())
 
     st.title("Multifamily Market Screener")
     st.caption("Compare U.S. metros for a 2-4 unit owner-occupied purchase, then test a specific property.")
