@@ -40,6 +40,12 @@ RENT_GROWTH_YEARS = 3
 PROCESSED_DATA_PATH = "data/processed/markets.csv"
 DEMO_DATA_PATH = "data/demo/markets_demo.csv"
 
+# --- App style ------------------------------------------------------------------
+ACCENT_COLOR = "#1F4E79"  # deep blue: main bars and highlights
+SECONDARY_COLOR = "#8FB3D9"  # light blue: secondary series
+NEUTRAL_COLOR = "#B0B7C3"
+PILLAR_COLORS = {"affordability": "#1F4E79", "growth": "#4F8FCB", "rental_demand": "#A9C8E8"}
+
 # --- Market scoring -------------------------------------------------------------
 # Each metric belongs to exactly one pillar. "higher" means a higher value is better.
 METRICS = {
