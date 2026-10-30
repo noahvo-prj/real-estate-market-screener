@@ -40,6 +40,32 @@ RENT_GROWTH_YEARS = 3
 PROCESSED_DATA_PATH = "data/processed/markets.csv"
 DEMO_DATA_PATH = "data/demo/markets_demo.csv"
 
+# --- Market scoring -------------------------------------------------------------
+# Each metric belongs to exactly one pillar. "higher" means a higher value is better.
+METRICS = {
+    "rent_to_price": {"pillar": "affordability", "better": "higher", "label": "Rent-to-price ratio"},
+    "price_to_income": {"pillar": "affordability", "better": "lower", "label": "Price-to-income ratio"},
+    "effective_tax_rate": {"pillar": "affordability", "better": "lower", "label": "Effective property tax rate"},
+    "home_price_growth": {"pillar": "growth", "better": "higher", "label": "Home price growth (5-yr annualized)"},
+    "population_growth": {"pillar": "growth", "better": "higher", "label": "Population growth (5-yr annualized)"},
+    "income_growth": {"pillar": "growth", "better": "higher", "label": "Household income growth (5-yr annualized)"},
+    "rental_vacancy_rate": {"pillar": "rental_demand", "better": "lower", "label": "Rental vacancy rate"},
+    "rent_growth": {"pillar": "rental_demand", "better": "higher", "label": "Rent growth (3-yr annualized)"},
+}
+
+PILLAR_LABELS = {
+    "affordability": "Affordability / cash flow",
+    "growth": "Growth",
+    "rental_demand": "Rental demand",
+}
+
+WEIGHT_PRESETS = {
+    "Cash-flow focused": {"affordability": 0.60, "growth": 0.20, "rental_demand": 0.20},
+    "Balanced": {"affordability": 0.40, "growth": 0.30, "rental_demand": 0.30},
+    "Growth focused": {"affordability": 0.20, "growth": 0.50, "rental_demand": 0.30},
+}
+DEFAULT_PRESET = "Balanced"
+
 # --- VA funding fee -----------------------------------------------------------
 # Purchase and construction loans. Each tier is (minimum down payment, fee rate),
 # checked from the highest down payment to the lowest.
