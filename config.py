@@ -4,10 +4,26 @@ All percentages are stored as decimals (0.07 means 7%).
 """
 
 # --- Markets and data sources ---------------------------------------------------
-# 20 metros picked for a mix of price levels and regions. `zillow_name` must match
-# Zillow's RegionName; `cbsa_code` is the Census metro code (2023 definitions).
-# `cbsa_code_base_year` is only set when the code was different in the base year.
+# 32 metros: a core set chosen for a mix of price levels and regions, plus military-heavy
+# markets (VA borrowers often buy near a base) and the largest high-cost metros for contrast.
+# `zillow_name` must match Zillow's RegionName; `cbsa_code` is the Census metro code
+# (2023 definitions). `cbsa_code_base_year` is only set when the code was different in the base year.
 METROS = [
+    # Large high-cost metros
+    {"zillow_name": "New York, NY", "cbsa_code": 35620},
+    {"zillow_name": "Los Angeles, CA", "cbsa_code": 31080},
+    {"zillow_name": "Chicago, IL", "cbsa_code": 16980},
+    {"zillow_name": "Washington, DC", "cbsa_code": 47900},
+    {"zillow_name": "San Francisco, CA", "cbsa_code": 41860},
+    {"zillow_name": "Miami, FL", "cbsa_code": 33100},
+    # Military-heavy markets
+    {"zillow_name": "Virginia Beach, VA", "cbsa_code": 47260},  # Naval Station Norfolk
+    {"zillow_name": "Colorado Springs, CO", "cbsa_code": 17820},  # Fort Carson, Peterson SFB
+    {"zillow_name": "Jacksonville, FL", "cbsa_code": 27260},  # NAS Jacksonville, Mayport
+    {"zillow_name": "Fayetteville, NC", "cbsa_code": 22180},  # Fort Bragg
+    {"zillow_name": "Killeen, TX", "cbsa_code": 28660},  # Fort Hood
+    {"zillow_name": "Clarksville, TN", "cbsa_code": 17300},  # Fort Campbell
+    # Core set: mix of price levels and regions
     {"zillow_name": "San Diego, CA", "cbsa_code": 41740},
     {"zillow_name": "Seattle, WA", "cbsa_code": 42660},
     {"zillow_name": "Boston, MA", "cbsa_code": 14460},

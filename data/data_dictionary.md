@@ -51,7 +51,10 @@ data are joined on `cbsa_code` using the metro list in `config.py`.
   tax rate rather than measuring it directly.
 - **Income growth base year.** The 2020 ACS 1-year release was not published in standard form
   (pandemic data-collection problems), so income growth compares 2019 with 2024.
-- **Boundary change.** Census metro definitions changed in 2023. Cleveland's 2024 code is 17410;
+- **Boundary changes.** Census metro definitions changed in 2023. Most metros kept their code but some
+  changed shape (for example, New York no longer includes its Pennsylvania counties and Chicago no
+  longer includes its Wisconsin county), so 2019-to-2024 income growth compares slightly different
+  areas for a few metros. Cleveland's code itself changed: its 2024 code is 17410;
   its 2019 income comes from the older Cleveland-Elyria metro (17460). See `cbsa_code_base_year`
   in `config.py`.
 - **Sampling error.** ACS 1-year estimates have margins of error that are not shown or used.

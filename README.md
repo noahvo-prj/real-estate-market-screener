@@ -14,7 +14,7 @@ demand for a multifamily owner-occupant, and does a specific property make finan
 
 | Tab | What you can do |
 |---|---|
-| **Market Rankings** | Rank 20 metros on a 0–100 score. Adjust the weights of three pillars (affordability, growth, rental demand) or pick a preset, and see how each market's rank changes across presets. |
+| **Market Rankings** | Rank 32 metros on a 0–100 score. Adjust the weights of three pillars (affordability, growth, rental demand) or pick a preset, and see how each market's rank changes across presets. |
 | **Market Comparison** | Compare 2–5 metros side by side: a metric table, home price vs. rent, growth vs. affordability, and pillar scores. |
 | **Property Calculator** | Evaluate one property two ways: as an investor (all units rented) and as an owner living in one unit (house hack). Includes VA funding fee handling, itemized cash needed at purchase, a 5–10 year projection, a sensitivity (tornado) chart, and an optional short-term rental scenario. |
 | **Methodology** | Every formula, the scoring method, data sources and years, assumptions and limitations. |
@@ -27,22 +27,41 @@ demand for a multifamily owner-occupant, and does a specific property make finan
 ## What the current data shows
 
 Data: Zillow through September 2026, Census ACS 2024, Census population estimates through July 2025.
-Scores are relative to these 20 metros.
+Scores are relative to these 32 metros.
 
-- **Indianapolis ranks #1 under all three weight presets** (composite score 74 under Balanced
-  weights), with low rental vacancy, solid rent growth and a below-average property tax rate.
-- **Weights matter for some markets.** Memphis ranks #4 when weighting cash flow and #15 when
-  weighting growth: it has a high rent-to-price ratio but a shrinking population. Pittsburgh shows
-  the same pattern (#3 vs. #13).
-- **No large metro meets the "1% rule"** at typical prices. Monthly rent-to-price ranges from
-  0.31% (Seattle) to 0.64% (Pittsburgh), which is why house hacking (living in one unit) is often
-  what makes the numbers work.
-- **Example property:** with the calculator's default assumptions (Indianapolis typical value of
-  $292,000, a duplex, 0% down VA loan, 6.5% placeholder rate), the owner's net housing cost is
-  about $1,278/month vs. $1,530 to rent a similar unit, and about $8,800 of cash is still needed
-  at purchase.
+- **The top three are the same under all three weight presets:** Clarksville, TN (composite score
+  74 under Balanced weights), Indianapolis and Fayetteville, NC. Two of the three are military
+  markets. Clarksville (Fort Campbell) has the lowest rental vacancy of the 32 (3.2%), a low
+  property tax rate and steady population growth.
+- **Weights matter for some markets.** Memphis ranks #5 when weighting cash flow and #25 when
+  weighting growth: it has the best affordability score but a shrinking population. Pittsburgh shows
+  the same pattern (#6 vs. #21), and New York moves the other way (#28 vs. #15).
+- **No metro in the set meets the "1% rule"** at typical prices. Monthly rent-to-price ranges from
+  0.31% (San Francisco) to 0.64% (Pittsburgh), which is why house hacking (living in one unit) is
+  often what makes the numbers work.
+- **The comparison set changes the answer.** With the original 20 metros, Indianapolis ranked #1;
+  adding military and large high-cost metros moved Clarksville ahead. Scores are relative by design.
+- **Example property:** with the calculator's default assumptions (Clarksville typical value of
+  $289,000, a duplex, 0% down VA loan, 6.5% placeholder rate), the owner's net housing cost is
+  about $1,314/month vs. $1,340 to rent a similar unit, and about $8,700 of cash is still needed
+  at purchase. As a pure rental (all units rented), it roughly breaks even (about -$17/month).
 
 These are screening results, not recommendations. See [Limitations](#limitations).
+
+## Which metros and why
+
+32 metros (Census metropolitan statistical areas) in three groups:
+
+- **Core set (20):** a mix of price levels and regions, from San Diego and Boston to Pittsburgh and
+  Memphis, so the cash flow vs. appreciation trade-off is visible.
+- **Military markets (6):** Virginia Beach, Colorado Springs, Jacksonville, Fayetteville (NC),
+  Killeen and Clarksville. VA borrowers often buy near a base. San Diego and San Antonio, in the
+  core set, are also major military markets.
+- **Large high-cost metros (6):** New York, Los Angeles, Chicago, Washington DC, San Francisco and
+  Miami, for contrast.
+
+The list lives in [`config.py`](config.py). Adding a metro takes its Zillow name and Census code,
+then a rerun of the pipeline. Because scores are relative, changing the list changes the scores.
 
 ## Methodology in brief
 
@@ -56,7 +75,7 @@ the composite is a weighted sum of the pillars.
 | Growth | 30% | 5-yr home price growth, 5-yr population growth, 5-yr income growth |
 | Rental demand | 30% | Rental vacancy rate, 3-yr rent growth |
 
-Percentile ranks are used instead of min-max scaling because, with only 20 markets, one outlier
+Percentile ranks are used instead of min-max scaling because, with a few dozen markets, one outlier
 would squash everyone else's min-max scores. An 80 simply means "beats 80% of the comparison set."
 The trade-off is that scores are relative, not absolute. Presets: Cash-flow focused (60/20/20),
 Balanced (40/30/30), Growth focused (20/50/30).
